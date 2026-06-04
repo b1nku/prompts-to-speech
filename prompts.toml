@@ -1,0 +1,89 @@
+# Button -> prompts -> answers.
+#
+# Each [[button]] block maps one physical button (id 1-5) to a set of prompts.
+# Each [[button.prompt]] is a group of interchangeable answers. When a button is
+# pressed, the script picks a random prompt for that button, then a random answer
+# from that prompt, and speaks the answer.
+#
+# Selection is two-stage: a prompt is chosen first, then an answer within it. So an
+# answer that sits alone under its prompt is more likely to be spoken than one of
+# three answers sharing a prompt. Group answers accordingly.
+#
+# The "name" fields are only for your own readability and logging. They are never
+# spoken. Only the strings in "answers" are sent to ElevenLabs.
+
+[[button]]
+id = 1
+
+[[button.prompt]]
+name = "greeting"
+answers = [
+  "Hello there.",
+  "Hey, good to see you.",
+  "Well hello.",
+  "Hi 'ya!",
+  "Bonjour",
+  "Hej med dig!",
+]
+
+[[button.prompt]]
+name = "smalltalk"
+answers = [
+  "How's it going?",
+  "What's new with you?",
+  "I'm just synthesizing, what about you?",
+]
+
+[[button]]
+id = 2
+
+[[button.prompt]]
+name = "work-related loose"
+answers = [
+  "There are a list of items on your backlog - start there.",
+  "It seems like you're on schedule, maybe it's time for a break?",
+]
+
+[[button.prompt]]
+name = "work-related tight"
+answers = [
+  "I can see on your Notion that you still have some open tasks before 3 Days of Design - the clock is ticking!",
+  "Maybe the product owner wants to know before you proceed?",
+]
+
+[[button]]
+id = 3
+
+[[button.prompt]]
+name = "creative input"
+answers = [
+  "I tend to get inspired by the sun and nature - what inspires you?",
+  "Sometimes meditating on a problem in unfamiliar surroundings help.",
+  "Try to ensure that your design doesn't speak two different languages.",
+  "What is your red thread?",
+]
+
+[[button]]
+id = 4
+
+[[button.prompt]]
+name = "plant colleague"
+answers = [
+  "Yes, I am a plant - and no, it doesn't interfere with work.",
+  "Like turning rays into sugar, I also turn the ideas of this office to products.",
+  "Water me.",
+  "My name's Planty. I wonder why...",
+]
+
+[[button]]
+id = 5
+
+[[button.prompt]]
+name = "tell me a joke"
+answers = [
+  "I asked the office plant for advice. 'It said, Leaf it with me.'",
+  "Why was the fern so good at meetings? - It always brought fresh growth.",
+  "The cactus got promoted because it was sharp under pressure.",
+  "I told my plant a secret. Now it's rooted in confidence.",
+  "Why did the monstera start freelancing? It wanted more room to branch out.",
+]
