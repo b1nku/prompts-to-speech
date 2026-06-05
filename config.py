@@ -27,6 +27,24 @@ def load_buttons(path: str = CONFIG_PATH) -> dict[int, list[list[str]]]:
     return buttons
 
 
+def load_button_labels(path: str = CONFIG_PATH) -> dict[int, str]:
+    """Return {button_id: "name / name"} from the prompt names in the TOML config.
+
+    Each prompt carries a human-readable "name"; this joins a button's prompt names
+    so the UI can label the button with what it does. Buttons whose prompts have no
+    names are omitted, letting callers fall back to a generic label.
+    """
+    with open(path, "rb") as f:
+        data = tomllib.load(f)
+
+    labels: dict[int, str] = {}
+    for button in data.get("button", []):
+        names = [p["name"] for p in button.get("prompt", []) if p.get("name")]
+        if names:
+            labels[button["id"]] = " / ".join(names)
+    return labels
+
+
 def all_lines(buttons: dict[int, list[list[str]]]) -> list[str]:
     """Every unique answer string across all buttons, order preserved."""
     seen: set[str] = set()

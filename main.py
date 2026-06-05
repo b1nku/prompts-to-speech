@@ -24,6 +24,7 @@ panel on the local network (press it from a phone). Both are for testing the pip
 without a controller attached.
 """
 
+import html
 import os
 import random
 import re
@@ -36,7 +37,7 @@ from serial.tools import list_ports
 from dotenv import load_dotenv
 
 import launchagent
-from config import AUDIO_DIR, CONFIG_PATH, all_lines, audio_filename, load_buttons
+from config import AUDIO_DIR, CONFIG_PATH, all_lines, audio_filename, load_button_labels, load_buttons
 
 # Matches a button-press line like "B3". Anything else on the wire is ignored.
 BUTTON_LINE = re.compile(rb"^B([1-5])\s*$")
@@ -272,8 +273,11 @@ _WEB_PAGE = """<!DOCTYPE html>
          display:flex; flex-direction:column; min-height:100vh; }
   header { padding:16px; text-align:center; opacity:.7; }
   .grid { flex:1; display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:12px; }
-  button { font-size:1.5rem; border:none; border-radius:16px; background:#2563eb; color:#fff;
-           padding:32px 0; touch-action:manipulation; transition:transform .05s, background .15s; }
+  button { border:none; border-radius:16px; background:#2563eb; color:#fff;
+           padding:28px 16px; touch-action:manipulation; transition:transform .05s, background .15s;
+           display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; }
+  button .num { font-size:.8rem; text-transform:uppercase; letter-spacing:.05em; opacity:.6; }
+  button .name { font-size:1.4rem; line-height:1.2; }
   button:active { transform:scale(.96); }
   button.flash { background:#16a34a; }
 </style>
@@ -323,10 +327,14 @@ def run_web_server(port: int = 8000) -> None:
 
     load_dotenv()
     buttons = load_buttons(CONFIG_PATH)
+    labels = load_button_labels(CONFIG_PATH)
     check_audio(buttons)
 
     markup = "\n".join(
-        f'  <button onclick="press({bid}, this)">Button {bid}</button>'
+        '  <button onclick="press({bid}, this)">'
+        '<span class="num">Button {bid}</span>'
+        '<span class="name">{name}</span></button>'.format(
+            bid=bid, name=html.escape(labels.get(bid, "")))
         for bid in sorted(buttons)
     )
     page = _WEB_PAGE.replace("{buttons}", markup).encode("utf-8")
