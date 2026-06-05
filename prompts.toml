@@ -16,7 +16,7 @@
 id = 1
 
 [[button.prompt]]
-name = "greeting"
+name = "greetings"
 answers = [
   "Hello there.",
   "Hey, good to see you.",
@@ -38,14 +38,14 @@ answers = [
 id = 2
 
 [[button.prompt]]
-name = "work-related loose"
+name = "work-related (loose)"
 answers = [
   "There are a list of items on your backlog - start there.",
   "It seems like you're on schedule, maybe it's time for a break?",
 ]
 
 [[button.prompt]]
-name = "work-related tight"
+name = "work-related (tight)"
 answers = [
   "I can see on your Notion that you still have some open tasks before 3 Days of Design - the clock is ticking!",
   "Maybe the product owner wants to know before you proceed?",
@@ -55,7 +55,7 @@ answers = [
 id = 3
 
 [[button.prompt]]
-name = "creative input"
+name = "creative inputs"
 answers = [
   "I tend to get inspired by the sun and nature - what inspires you?",
   "Sometimes meditating on a problem in unfamiliar surroundings help.",
