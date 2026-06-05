@@ -8,12 +8,16 @@ An external LED on GP15 is driven by the host, not by the press: the host blinks
 during its "thinking" pause by sending "L1\\n"/"L0\\n" (LED on/off), which this firmware
 reads without blocking the button scan.
 
-Button to ID mapping (GP2..GP6 -> 1..5):
+The onboard BOOTSEL button is also read and reported as "B0", which the host turns
+into a random answer drawn from every button's prompts. No wiring is needed for it.
+
+Button to ID mapping (GP2..GP6 -> 1..5, onboard BOOTSEL -> 0):
     GP2 -> B1
     GP3 -> B2
     GP4 -> B3
     GP5 -> B4
     GP6 -> B5
+    BOOTSEL -> B0
 
 Wiring: connect each button between its GPIO pin and GND. The internal pull-ups are
 enabled, so the pin reads 1 (high) when released and 0 (low) when pressed. No external
@@ -28,6 +32,7 @@ power-up.
 """
 
 from machine import Pin
+import rp2
 import sys
 import uselect
 import utime
@@ -48,6 +53,14 @@ buttons = [Pin(gp, Pin.IN, Pin.PULL_UP) for gp in BUTTON_PINS]
 stable = [RELEASED] * len(buttons)        # last debounced (accepted) value
 last_reading = [RELEASED] * len(buttons)  # last raw value seen
 last_change = [utime.ticks_ms()] * len(buttons)
+
+# Onboard BOOTSEL button, read via rp2.bootsel_button() -> reports as "B0". Unlike the
+# wired buttons it reads 1 when pressed and 0 when released, so it gets its own state.
+BOOTSEL_PRESSED = 1
+BOOTSEL_RELEASED = 0
+bootsel_stable = BOOTSEL_RELEASED
+bootsel_last = BOOTSEL_RELEASED
+bootsel_change = utime.ticks_ms()
 
 # External "thinking" LED on GP15, driven by the host over serial (see poll_host).
 # Wired active-high to GND, so led.on() lights it.
@@ -100,5 +113,16 @@ while True:
                 # the host, which blinks it during its thinking pause.
                 if reading == PRESSED:
                     print("B{}".format(i + 1))
+
+    # Same debounce, separately, for the onboard BOOTSEL button -> "B0".
+    bootsel_reading = rp2.bootsel_button()
+    if bootsel_reading != bootsel_last:
+        bootsel_last = bootsel_reading
+        bootsel_change = now
+    elif utime.ticks_diff(now, bootsel_change) >= DEBOUNCE_MS:
+        if bootsel_reading != bootsel_stable:
+            bootsel_stable = bootsel_reading
+            if bootsel_reading == BOOTSEL_PRESSED:
+                print("B0")
 
     utime.sleep_ms(5)

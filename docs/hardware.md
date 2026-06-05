@@ -31,8 +31,13 @@ File: `firmware/pico/main.py` (MicroPython).
 | GP4  | 3         | `B3`  |
 | GP5  | 4         | `B4`  |
 | GP6  | 5         | `B5`  |
+| BOOTSEL (onboard) | — | `B0`  |
 
 Wire each button between its GPIO pin and GND. Internal pull-ups are enabled, so no external resistors are needed.
+
+The onboard BOOTSEL button needs no wiring; it is read via `rp2.bootsel_button()` and
+reports as `B0`, which the host speaks as a random answer drawn from *every* button's
+prompts (rather than one button's set).
 
 An external "thinking" LED goes on **GP15**: `GP15 -> ~220-330Ω resistor -> LED anode (+)`, `LED cathode (-) -> GND`.
 The host blinks it while it "thinks" after a press, then the answer plays.

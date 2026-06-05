@@ -11,8 +11,9 @@ The serial port is auto-detected by USB vendor ID, so you normally do not need t
 configure it. Set SERIAL_PORT in .env only to force a specific device.
 
 Serial protocol: one newline-terminated ASCII line per press, formatted "B<id>",
-e.g. "B3\\n" for button 3. Lines that don't match are ignored, so boot banners and
-debug output from the controller are skipped safely.
+e.g. "B3\\n" for button 3. The onboard BOOTSEL button reports as "B0\\n" and speaks a
+random answer drawn from every button's prompts. Lines that don't match are ignored,
+so boot banners and debug output from the controller are skipped safely.
 
 The host also talks back: after a press it pauses for a short "thinking" beat before
 speaking the answer, and during that beat it blinks the controller's onboard LED by
@@ -37,10 +38,23 @@ from serial.tools import list_ports
 from dotenv import load_dotenv
 
 import launchagent
-from config import AUDIO_DIR, CONFIG_PATH, all_lines, audio_filename, load_button_labels, load_buttons
+from config import (
+    AUDIO_DIR,
+    CONFIG_PATH,
+    all_lines,
+    all_prompts,
+    audio_filename,
+    load_button_labels,
+    load_buttons,
+)
 
-# Matches a button-press line like "B3". Anything else on the wire is ignored.
-BUTTON_LINE = re.compile(rb"^B([1-5])\s*$")
+# The Pico's onboard BOOTSEL button reports as "B0" and speaks a random answer from
+# all prompts; the five wired buttons report as "B1".."B5".
+BUILTIN_BUTTON = 0
+
+# Matches a button-press line like "B3" (or "B0" for the onboard button). Anything
+# else on the wire is ignored.
+BUTTON_LINE = re.compile(rb"^B([0-5])\s*$")
 
 # Native USB vendor IDs for the boards themselves. This is the most reliable signal:
 # the board identifies itself, not a generic chip shared with other peripherals.
@@ -170,7 +184,8 @@ def handle_press(button_id: int, buttons: dict[int, list[list[str]]],
     `ser`, when given, is the open controller connection used to blink its LED during
     the thinking pause; the debug/web modes pass None and just get the pause.
     """
-    prompts = buttons.get(button_id)
+    # The onboard button draws from every button's prompts; the rest use their own.
+    prompts = all_prompts(buttons) if button_id == BUILTIN_BUTTON else buttons.get(button_id)
     if not prompts:
         print(f"Button {button_id} has no prompts configured.")
         return
@@ -256,6 +271,9 @@ def run_debug_gui() -> None:
     for col, button_id in enumerate(sorted(buttons)):
         tk.Button(frame, text=f"Button {button_id}", width=12, height=3,
                   command=lambda b=button_id: on_click(b)).grid(row=0, column=col, padx=4)
+    # The onboard BOOTSEL button (random across all prompts), at the end of the row.
+    tk.Button(frame, text="Onboard\n(random)", width=12, height=3,
+              command=lambda: on_click(BUILTIN_BUTTON)).grid(row=0, column=len(buttons), padx=4)
     root.mainloop()
 
 
@@ -330,15 +348,22 @@ def run_web_server(port: int = 8000) -> None:
     labels = load_button_labels(CONFIG_PATH)
     check_audio(buttons)
 
-    markup = "\n".join(
+    button_markup = "\n".join(
         '  <button onclick="press({bid}, this)">'
         '<span class="num">Button {bid}</span>'
         '<span class="name">{name}</span></button>'.format(
             bid=bid, name=html.escape(labels.get(bid, "")))
         for bid in sorted(buttons)
     )
+    # The onboard BOOTSEL button: a random answer from every button's prompts.
+    onboard_markup = (
+        '  <button onclick="press({bid}, this)">'
+        '<span class="num">Onboard</span>'
+        '<span class="name">Random</span></button>'.format(bid=BUILTIN_BUTTON)
+    )
+    markup = "\n".join([button_markup, onboard_markup])
     page = _WEB_PAGE.replace("{buttons}", markup).encode("utf-8")
-    press_path = re.compile(r"^/press/([1-9]\d*)$")
+    press_path = re.compile(r"^/press/(\d+)$")
 
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, *args):
@@ -359,7 +384,7 @@ def run_web_server(port: int = 8000) -> None:
 
         def do_POST(self):
             match = press_path.match(self.path)
-            if match and int(match.group(1)) in buttons:
+            if match and (int(match.group(1)) == BUILTIN_BUTTON or int(match.group(1)) in buttons):
                 threading.Thread(target=handle_press, args=(int(match.group(1)), buttons),
                                  daemon=True).start()
                 self._send(200, b'{"ok":true}', "application/json")

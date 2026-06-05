@@ -45,6 +45,18 @@ def load_button_labels(path: str = CONFIG_PATH) -> dict[int, str]:
     return labels
 
 
+def all_prompts(buttons: dict[int, list[list[str]]]) -> list[list[str]]:
+    """Every prompt group across all buttons, flattened into one list.
+
+    Used by the Pico's built-in (BOOTSEL) button, which speaks a random answer
+    drawn from the whole set rather than one button's prompts.
+    """
+    prompts: list[list[str]] = []
+    for groups in buttons.values():
+        prompts.extend(groups)
+    return prompts
+
+
 def all_lines(buttons: dict[int, list[list[str]]]) -> list[str]:
     """Every unique answer string across all buttons, order preserved."""
     seen: set[str] = set()
