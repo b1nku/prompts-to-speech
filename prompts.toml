@@ -16,46 +16,55 @@
 id = 1
 
 [[button.prompt]]
-name = "greetings"
+name = "Work Notion"
 answers = [
-  "Hello there.",
-  "Hey, good to see you.",
-  "Well hello.",
-  "Hi 'ya!",
-  "Bonjour",
-  "Hej med dig!",
+  "I checked your Notion and You have 2 items left on this week's to-do.",
+  "I would priortise finishing the haptic feedback - tactility is good.",
+  "Last meeting's notes emphasise the need for affordances - have you looked at that?",
+  "Break the feature into components - then you can start from the bottom.",
+  "The most pressing item on your 'Last Minute Changes'-board on Notion, is the sound feedback.",
 ]
 
 [[button.prompt]]
-name = "smalltalk"
+name = "Work Calendar"
 answers = [
-  "How's it going?",
-  "What's new with you?",
-  "I'm just synthesizing, what about you?",
+  "Your colleague has taken time off early this weekend, so they won't be in office friday.",
+  "I can see that she is currently busy - try sending her a message.",
+  "The deadline is set for Thursday June 18th, still plenty of time for creative exploration!",
+  "The visitors will arrive next Tuesday, have you considered getting them a welcome gift?",
+  "Three days of design is June 10th through June 12th - we're almost go-time!",
 ]
 
 [[button]]
 id = 2
 
 [[button.prompt]]
-name = "work-related (loose)"
+name = "Work-life"
 answers = [
-  "There are a list of items on your backlog - start there.",
-  "It seems like you're on schedule, maybe it's time for a break?",
+  "I know that Louis hides the good wine in the top right cupboard. You didn't hear that from me.",
+  "I'm always so afraid that this shelf will come tumbling down on me.",
+  "Let's get some windows open, it's stuffy in here.",
+  "I'm parched - pour a beer into my soil, will you?",
+  "Only 6, 7 days left until vacation. I think I will go to Ibiza.",
+  "I think I heard someone brew coffee in the kitchen earlier - hurry up and check if it's still warm.",
 ]
 
 [[button.prompt]]
-name = "work-related (tight)"
+name = "Work Creative Director"
 answers = [
-  "I can see on your Notion that you still have some open tasks before 3 Days of Design - the clock is ticking!",
-  "Maybe the product owner wants to know before you proceed?",
+  "Start by making a mood board. What inspires you? Remember to keep a red thread.",
+  "Don't be afraid to kill your darlings - the simplest projects are sometimes the best.",
+  "What's the most significant feature of your design? The other features should support it, not compete with it.",
+  "Try to ensure that your design doesn't speak two different languages.",
+  "Try authoring a core ethos of your design, adopt that ideology - the specifics will come by themselves.",
+  "Remember KISS: Keep It Simple, Stupid.",
 ]
 
 [[button]]
 id = 3
 
 [[button.prompt]]
-name = "creative inputs"
+name = "Fortnite"
 answers = [
   "I tend to get inspired by the sun and nature - what inspires you?",
   "Sometimes meditating on a problem in unfamiliar surroundings help.",
