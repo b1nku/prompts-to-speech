@@ -15,6 +15,11 @@ line that doesn't match, so boot banners and stray output are harmless.
 - Baud: `115200`, must match on both ends.
 - The firmware debounces each button and fires only on press, so one push is one line.
 
+The host also sends commands back to the controller to drive its "thinking" LED: `L1`
+turns it on, `L0` off (newline-terminated). The host blinks the LED with these during
+its short "thinking" pause between a press and the spoken answer. The firmware reads
+them without blocking the button scan.
+
 ## Firmware: Raspberry Pi Pico
 
 File: `firmware/pico/main.py` (MicroPython).
@@ -28,7 +33,9 @@ File: `firmware/pico/main.py` (MicroPython).
 | GP6  | 5         | `B5`  |
 
 Wire each button between its GPIO pin and GND. Internal pull-ups are enabled, so no external resistors are needed.
-The onboard LED flashes on each press.
+
+An external "thinking" LED goes on **GP15**: `GP15 -> ~220-330Ω resistor -> LED anode (+)`, `LED cathode (-) -> GND`.
+The host blinks it while it "thinks" after a press, then the answer plays.
 
 Install: flash MicroPython, then copy the file to the board as `main.py` so it runs on power-up:
 
@@ -51,7 +58,10 @@ File: `firmware/arduino_nano/arduino_nano.ino`.
 | D6  | 5         | `B5`  |
 
 Same wiring idea as the Pico: each button between its pin and GND, `INPUT_PULLUP`
-enabled, onboard LED flashes on each press.
+enabled.
+
+The external "thinking" LED goes on **D9**: `D9 -> ~220-330Ω resistor -> LED anode (+)`, `LED cathode (-) -> GND`.
+The host blinks it while it "thinks" after a press, then the answer plays.
 
 Install: open the sketch in the Arduino IDE, select the Nano board and its port, and
 upload.

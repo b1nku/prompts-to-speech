@@ -14,6 +14,11 @@ Serial protocol: one newline-terminated ASCII line per press, formatted "B<id>",
 e.g. "B3\\n" for button 3. Lines that don't match are ignored, so boot banners and
 debug output from the controller are skipped safely.
 
+The host also talks back: after a press it pauses for a short "thinking" beat before
+speaking the answer, and during that beat it blinks the controller's onboard LED by
+sending "L1\\n"/"L0\\n" (LED on/off). The --debug and --web test modes have no
+controller, so they keep the pause but skip the LED.
+
 Run with --debug to open an on-screen panel of buttons, or --web to serve a button
 panel on the local network (press it from a phone). Both are for testing the pipeline
 without a controller attached.
@@ -102,6 +107,37 @@ def pick_answer(prompts: list[list[str]]) -> str:
     return random.choice(random.choice(prompts))
 
 
+# How long to "think" between a press and the spoken answer, and how fast the LED
+# blinks during that pause. The blink interval is the LED's on (or off) time, so one
+# full on+off cycle takes twice this.
+THINKING_DELAY = 1.75   # seconds
+BLINK_INTERVAL = 0.12   # seconds
+
+
+def set_led(ser: "serial.Serial | None", on: bool) -> None:
+    """Turn the controller's onboard LED on or off over serial. No-op without one."""
+    if ser is None:
+        return
+    try:
+        ser.write(b"L1\n" if on else b"L0\n")
+    except serial.SerialException:
+        pass  # controller went away mid-blink; playback still proceeds
+
+
+def think(ser: "serial.Serial | None", duration: float = THINKING_DELAY) -> None:
+    """Pause for the "thinking" beat, blinking the controller LED if one is connected.
+
+    Without a controller (debug/web modes) this just sleeps, so the pacing matches.
+    """
+    deadline = time.monotonic() + duration
+    on = True
+    while time.monotonic() < deadline:
+        set_led(ser, on)
+        on = not on
+        time.sleep(BLINK_INTERVAL)
+    set_led(ser, False)  # leave the LED off afterwards
+
+
 # Absolute path so it resolves under launchd's minimal PATH.
 AFPLAY = "/usr/bin/afplay"
 
@@ -126,8 +162,13 @@ def check_audio(buttons: dict[int, list[list[str]]]) -> bool:
     return True
 
 
-def handle_press(button_id: int, buttons: dict[int, list[list[str]]]) -> None:
-    """Pick a random answer for a button and play it. Shared by serial and debug GUI."""
+def handle_press(button_id: int, buttons: dict[int, list[list[str]]],
+                 ser: "serial.Serial | None" = None) -> None:
+    """Pick a random answer for a button and play it. Shared by serial and debug GUI.
+
+    `ser`, when given, is the open controller connection used to blink its LED during
+    the thinking pause; the debug/web modes pass None and just get the pause.
+    """
     prompts = buttons.get(button_id)
     if not prompts:
         print(f"Button {button_id} has no prompts configured.")
@@ -138,6 +179,7 @@ def handle_press(button_id: int, buttons: dict[int, list[list[str]]]) -> None:
         print(f"Button {button_id} -> {text!r} (NO AUDIO, skipping)", file=sys.stderr)
         return
     print(f"Button {button_id} -> {text!r}")
+    think(ser)  # blink the LED and pause, as if pondering, before answering
     play(path)
 
 
@@ -178,7 +220,7 @@ def run(no_install: bool = False) -> None:
                     match = BUTTON_LINE.match(raw.strip())
                     if not match:
                         continue
-                    handle_press(int(match.group(1)), buttons)
+                    handle_press(int(match.group(1)), buttons, ser)
         except serial.SerialException as e:
             print(f"Serial error: {e}. Rescanning in 2s...", file=sys.stderr)
             time.sleep(2)
